@@ -95,23 +95,23 @@ function resizeImage(width, method, scaleStyles)
     executeAction( charIDToTypeID("ImgS"), action, DialogModes.NO );
 }
 
-function exportAllLayers(folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace)
+function exportAllLayers(folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace, initialResolution)
 {
     var doc = app.activeDocument;
     for(var a=0;a<doc.layers.length;a++)
     {
-        exportImages(doc.layers[a], doc.layers[a].name, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace);
+        exportImages(doc.layers[a], doc.layers[a].name, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace, initialResolution);
     }
 }
 
-function exportSingleLayer(baseName, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace)
+function exportSingleLayer(baseName, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace, initialResolution)
 {
     var doc = app.activeDocument;
     var layer = doc.activeLayer;
-    exportImages(layer, baseName, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace);
+    exportImages(layer, baseName, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace, initialResolution);
 }
 
-function exportImages(layer, baseName, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace)
+function exportImages(layer, baseName, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace, initialResolution)
 {
     // get currect document
     var doc = app.activeDocument;
@@ -139,10 +139,15 @@ function exportImages(layer, baseName, folder, resizeMethod, scaleStyles, origin
 	
 	// normalise name (basic normalisation lower case and hyphenated, modify or remove to taste)
 	var normalisedName = dup.name.toLowerCase().replace(' ', '-');
-	
-	var originalWidth = dup.width;
-	
-	var mdpiWidth = originalWidth * ( OriginalDensity.MDPI.value / originalDensity);              
+
+    var originalWidth;
+    if (dup.width > initialResolution) {
+        originalWidth = initialResolution;
+    } else {
+        originalWidth = dup.width;
+    }
+
+	var mdpiWidth = originalWidth * ( OriginalDensity.MDPI.value / originalDensity);
 	var hdpiWidth = originalWidth *  ( OriginalDensity.HDPI.value / originalDensity);
 	var xhdpiWidth = originalWidth *  ( OriginalDensity.XHDPI.value / originalDensity);
 	var xxhdpiWidth = originalWidth *  ( OriginalDensity.XXHDPI.value / originalDensity);
@@ -164,6 +169,7 @@ function okClickedHandler()
     var baseName = exportDialog.namePanel.nameBox.text;
     var originalDensity = origalDensityLookup[exportDialog.originalDensityOptions.selection.text];
     var trimWhiteSpace = exportDialog.trimWhiteSpaceCheckBox.value;
+    var initialResolution = exportDialog.resolution.text;
     exportDialog.close();
 
     // select a folder to save to
@@ -178,10 +184,10 @@ function okClickedHandler()
         app.preferences.typeUnits=TypeUnits.PIXELS;
 
         if (exportDialog.allLayersCheckBox.value == true) {
-            exportAllLayers(folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace);
+            exportAllLayers(folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace, initialResolution);
         }
         else {
-            exportSingleLayer(baseName, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace);
+            exportSingleLayer(baseName, folder, resizeMethod, scaleStyles, originalDensity, trimWhiteSpace, initialResolution);
         }
 
         app.preferences.rulerUnits=originalRulerUnits;
@@ -206,15 +212,21 @@ exportDialog.add('statictext', undefined, 'Resize method: ');
 exportDialog.methodOptions = exportDialog.add('dropdownlist', undefined, [ResizeMethod.AUTO.name, ResizeMethod.NEARESTNEIGHBOUR.name, ResizeMethod.BILINEAR.name, ResizeMethod.BICUBIC.name, ResizeMethod.BICUBICSMOOTHER.name, ResizeMethod.BICUBICSHARPER.name]);
 exportDialog.methodOptions.children[0].selected = true;
 
-exportDialog.add('statictext', undefined, 'Orignal density: ');
+exportDialog.add('statictext', undefined, 'Base density: ');
 exportDialog.originalDensityOptions = exportDialog.add('dropdownlist', undefined, [OriginalDensity.MDPI.name, OriginalDensity.HDPI.name, OriginalDensity.XHDPI.name, OriginalDensity.XXHDPI.name, OriginalDensity.XXXHDPI.name], 'den');
-exportDialog.originalDensityOptions.children[3].selected = true;
+exportDialog.originalDensityOptions.children[2].selected = true;
+
+exportDialog.add('statictext', undefined, 'With width (px): ');
+exportDialog.resolution = exportDialog.add('edittext', undefined, '48', 'initialResolution');
+// exportDialog.resolution.value = 128;
+
+exportDialog.add('statictext', undefined, 'Export options: ');
 
 exportDialog.scaleStylesCheckBox = exportDialog.add('checkbox', undefined, 'Scale Styles');
 exportDialog.scaleStylesCheckBox.value = true;
 
 exportDialog.allLayersCheckBox = exportDialog.add('checkbox', undefined, 'Export All Layers');
-exportDialog.allLayersCheckBox.value = false;
+exportDialog.allLayersCheckBox.value = true;
 
 exportDialog.trimWhiteSpaceCheckBox = exportDialog.add('checkbox', undefined, 'Trim Whitespace');
 exportDialog.trimWhiteSpaceCheckBox.value = false;
