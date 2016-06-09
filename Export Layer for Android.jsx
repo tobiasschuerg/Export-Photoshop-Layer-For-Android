@@ -1,27 +1,7 @@
 /**
- * Export for Android Photoshop Script
+ * Export for Android Photoshop Script 1.3
  *
- * Author: Rich Freedman (greybeardedgeek.net)
- * GitHub: https://github.com/rfreedman
- * Twitter: @greybeardedgeek
- *
- * ---------
- * Modified by Julien Quéré - @juli1quere - http://sinplicity.fr :
- *  - Add the ability to specify the source file density,
- *  - Add XXHDPI,
- *  - Add the "automatic" option for the resize method.
- * ---------
- *
- * ---------
- * Modified by Aaron Bonham - @abonham :
- * - Add the ability to choose between export all layers or just active
- * - Add toggle for trim whitespace
- * ---------
- *
- * This script started as the 'Export for iOS' script, found at http://pastebin.com/12dHWYm8,
- * and originally authored by Daniel Wood ( twitter: @loadedwino )
- *
- * I modified the iOS script to instead export the appropriate image sizes for Android.
+ * See the contributors file for a changelog and contributors.
  *
  * This script is intended to be used on a photoshop document containing mdpi
  * artwork for Android. It will resize, trim and save the selected layer or group, into a
@@ -30,8 +10,9 @@
  * resizing method and whether to scale styles or not. It does not alter your original
  * document in anyway.
  *
- * Images are saved to 'drawable-ldpi', 'drawable-mdpi', 'drawable-hdpi', and 'drawable-xhdpi'
- * directories under the selected output directory. If these directories do not exist,
+ * Images are saved to 'drawable-mdpi', 'drawable-hdpi', 'drawable-xhdpi',
+ * 'drawable-xxhdpi', and 'drawable-xxxhdpi'
+ * directories under the selected output directory. If these directories do not exist, 
  * the script will create them.
  *
  * Original 'license':
@@ -59,7 +40,8 @@ var OriginalDensity = {
     MDPI: {name: 'MDPI', value: 1},
     HDPI: {name: 'HDPI', value: 1.5},
     XHDPI: {name: 'XHDPI', value: 2},
-    XXHDPI: {name: 'XXHDPI', value: 3}
+    XXHDPI: {name: 'XXHDPI', value: 3},
+    XXXHDPI: {name: 'XXXHDPI', value: 4}
 };
 
 var origalDensityLookup = {};
@@ -67,6 +49,7 @@ origalDensityLookup[OriginalDensity.MDPI.name] = OriginalDensity.MDPI.value;
 origalDensityLookup[OriginalDensity.HDPI.name] = OriginalDensity.HDPI.value;
 origalDensityLookup[OriginalDensity.XHDPI.name] = OriginalDensity.XHDPI.value;
 origalDensityLookup[OriginalDensity.XXHDPI.name] = OriginalDensity.XXHDPI.value;
+origalDensityLookup[OriginalDensity.XXXHDPI.name] = OriginalDensity.XXXHDPI.value;
 
 var exportDialog;
 
@@ -151,24 +134,25 @@ function exportImages(layer, baseName, folder, resizeMethod, scaleStyles, origin
         dup.trim(TrimType.TRANSPARENT);
     }
 
-    // adjust canvas size so that it is an even number of pixels (so scaling down fits on whole pixel)
-    dup.resizeCanvas(Math.ceil(dup.width/2)*2, Math.ceil(dup.height/2)*2, AnchorPosition.TOPLEFT);
+	// adjust canvas size so that it is an even number of pixels (so scaling down fits on whole pixel)
+	dup.resizeCanvas(Math.ceil(dup.width/2)*2, Math.ceil(dup.height/2)*2, AnchorPosition.TOPLEFT);
+	
+	// normalise name (basic normalisation lower case and hyphenated, modify or remove to taste)
+	var normalisedName = dup.name.toLowerCase().replace(' ', '-');
+	
+	var originalWidth = dup.width;
+	
+	var mdpiWidth = originalWidth * ( OriginalDensity.MDPI.value / originalDensity);              
+	var hdpiWidth = originalWidth *  ( OriginalDensity.HDPI.value / originalDensity);
+	var xhdpiWidth = originalWidth *  ( OriginalDensity.XHDPI.value / originalDensity);
+	var xxhdpiWidth = originalWidth *  ( OriginalDensity.XXHDPI.value / originalDensity);
+	var xxxhdpiWidth = originalWidth *  ( OriginalDensity.XXXHDPI.value / originalDensity);
 
-    // normalise name (basic normalisation lower case and hyphenated, modify or remove to taste)
-    var normalisedName = dup.name.toLowerCase().replace(' ', '_');
-
-    var originalWidth = dup.width;
-
-    var mdpiWidth = originalWidth * ( OriginalDensity.MDPI.value / originalDensity);
-    var hdpiWidth = originalWidth *  ( OriginalDensity.HDPI.value / originalDensity);
-    var xhdpiWidth = originalWidth *  ( OriginalDensity.XHDPI.value / originalDensity);
-    var xxhdpiWidth = originalWidth *  ( OriginalDensity.XXHDPI.value / originalDensity);
-
-
-    savePng(mdpiWidth,  resizeMethod, scaleStyles, folder.fullName + '/drawable-mdpi',  normalisedName, dup);
-    savePng(hdpiWidth,  resizeMethod, scaleStyles, folder.fullName + '/drawable-hdpi',  normalisedName, dup);
-    savePng(xhdpiWidth, resizeMethod, scaleStyles, folder.fullName + '/drawable-xhdpi', normalisedName, dup);
-    savePng(xxhdpiWidth, resizeMethod, scaleStyles, folder.fullName + '/drawable-xxhdpi', normalisedName, dup);
+	savePng(mdpiWidth,  resizeMethod, scaleStyles, folder.fullName + '/drawable-mdpi',  normalisedName, dup);
+	savePng(hdpiWidth,  resizeMethod, scaleStyles, folder.fullName + '/drawable-hdpi',  normalisedName, dup);
+	savePng(xhdpiWidth, resizeMethod, scaleStyles, folder.fullName + '/drawable-xhdpi', normalisedName, dup);
+	savePng(xxhdpiWidth, resizeMethod, scaleStyles, folder.fullName + '/drawable-xxhdpi', normalisedName, dup);
+	savePng(xxxhdpiWidth, resizeMethod, scaleStyles, folder.fullName + '/drawable-xxxhdpi', normalisedName, dup);
 
     dup.close(SaveOptions.DONOTSAVECHANGES);
 }
@@ -223,7 +207,7 @@ exportDialog.methodOptions = exportDialog.add('dropdownlist', undefined, [Resize
 exportDialog.methodOptions.children[0].selected = true;
 
 exportDialog.add('statictext', undefined, 'Orignal density: ');
-exportDialog.originalDensityOptions = exportDialog.add('dropdownlist', undefined, [OriginalDensity.MDPI.name, OriginalDensity.HDPI.name, OriginalDensity.XHDPI.name, OriginalDensity.XXHDPI.name], 'den');
+exportDialog.originalDensityOptions = exportDialog.add('dropdownlist', undefined, [OriginalDensity.MDPI.name, OriginalDensity.HDPI.name, OriginalDensity.XHDPI.name, OriginalDensity.XXHDPI.name, OriginalDensity.XXXHDPI.name], 'den');
 exportDialog.originalDensityOptions.children[3].selected = true;
 
 exportDialog.scaleStylesCheckBox = exportDialog.add('checkbox', undefined, 'Scale Styles');
