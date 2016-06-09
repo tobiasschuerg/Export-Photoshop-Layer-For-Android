@@ -1,5 +1,5 @@
 /**
- * Export for Android Photoshop Script 1.3
+ * Export for Android Photoshop Script 1.4
  *
  * See the contributors file for a changelog and contributors.
  *
@@ -37,11 +37,11 @@ resizeMethodLookup[ResizeMethod.BICUBICSMOOTHER.name] = ResizeMethod.BICUBICSMOO
 resizeMethodLookup[ResizeMethod.BICUBICSHARPER.name] = ResizeMethod.BICUBICSHARPER.value;
 
 var OriginalDensity = {
-    MDPI: {name: 'MDPI', value: 1},
-    HDPI: {name: 'HDPI', value: 1.5},
-    XHDPI: {name: 'XHDPI', value: 2},
-    XXHDPI: {name: 'XXHDPI', value: 3},
-    XXXHDPI: {name: 'XXXHDPI', value: 4}
+    MDPI: {name: 'MDPI', value: 1}, // ~ 160dpi
+    HDPI: {name: 'HDPI', value: 1.5}, // ~ 240dpi
+    XHDPI: {name: 'XHDPI', value: 2}, // ~ 320dpi
+    XXHDPI: {name: 'XXHDPI', value: 3}, // ~ 480dpi
+    XXXHDPI: {name: 'XXXHDPI', value: 4} // ~ 640dpi -> 4K
 };
 
 var origalDensityLookup = {};
